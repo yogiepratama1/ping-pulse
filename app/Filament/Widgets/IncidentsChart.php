@@ -2,7 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Incident;
 use Filament\Widgets\ChartWidget;
+use Flowframe\Trend\Trend;
+use Flowframe\Trend\TrendValue;
 
 class IncidentsChart extends ChartWidget
 {
@@ -10,7 +13,7 @@ class IncidentsChart extends ChartWidget
 
     protected function getData(): array
     {
-        $data = \Flowframe\Trend\Trend::model(\App\Models\Incident::class)
+        $data = Trend::model(Incident::class)
             ->between(
                 start: now()->subDays(7),
                 end: now(),
@@ -22,11 +25,11 @@ class IncidentsChart extends ChartWidget
             'datasets' => [
                 [
                     'label' => 'Incidents',
-                    'data' => $data->map(fn(\Flowframe\Trend\TrendValue $value) => $value->aggregate),
+                    'data' => $data->map(fn(TrendValue $value) => $value->aggregate),
                     'borderColor' => '#ef4444', // Danger red
                 ],
             ],
-            'labels' => $data->map(fn(\Flowframe\Trend\TrendValue $value) => $value->date),
+            'labels' => $data->map(fn(TrendValue $value) => $value->date),
         ];
     }
 

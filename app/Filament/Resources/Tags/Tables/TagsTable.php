@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
 
 class TagsTable
 {
@@ -13,16 +14,16 @@ class TagsTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->badge()
                     ->color(fn(\App\Models\Tag $record) => $record->color),
 
-                \Filament\Tables\Columns\TextColumn::make('monitors_count')
+                TextColumn::make('monitors_count')
                     ->counts('monitors')
                     ->label('Monitors'),
 
-                \Filament\Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

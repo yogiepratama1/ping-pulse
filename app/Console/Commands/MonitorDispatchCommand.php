@@ -2,7 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\PerformUptimeCheck;
+use App\Models\Monitor;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 
 class MonitorDispatchCommand extends Command
 {
@@ -25,12 +28,25 @@ class MonitorDispatchCommand extends Command
      */
     public function handle()
     {
-        $count = 0;
-        \App\Models\Monitor::dueForCheck()->lazyById(100)->each(function ($monitor) use (&$count) {
-            \App\Jobs\PerformUptimeCheck::dispatch($monitor);
-            $count++;
-        });
+        $lock = Cache::lock('monitor:dispatch:lock', 60);
 
-        $this->info("Dispatched {$count} monitor checks.");
+        if (!$lock->get()) {
+            $this->warn("The command is already running.");
+            return;
+        }
+
+        try {
+            Cache::put('monitor:dispatch:running', true, 60);
+            $count = 0;
+            Monitor::dueForCheck()->lazyById(100)->each(function ($monitor) use (&$count) {
+                PerformUptimeCheck::dispatch($monitor);
+                $count++;
+            });
+
+            $this->info("Dispatched {$count} monitor checks.");
+        } finally {
+            Cache::forget('monitor:dispatch:running');
+            $lock->release();
+        }
     }
 }

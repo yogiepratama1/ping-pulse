@@ -2,9 +2,15 @@
 
 namespace App\Filament\Resources\Tags;
 
+use App\Filament\Resources\Tags\Pages\CreateTag;
+use App\Filament\Resources\Tags\Pages\EditTag;
+use App\Filament\Resources\Tags\Pages\ListTags;
+use App\Filament\Resources\Tags\Schemas\TagForm;
+use App\Filament\Resources\Tags\Tables\TagsTable;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use App\Models\Tag;
@@ -15,14 +21,14 @@ class TagResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-tag';
 
-    public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    public static function form(Schema $schema): Schema
     {
-        return \App\Filament\Resources\Tags\Schemas\TagForm::configure($schema);
+        return TagForm::configure($schema);
     }
 
-    public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
+    public static function table(Table $table): Table
     {
-        return \App\Filament\Resources\Tags\Tables\TagsTable::configure($table);
+        return TagsTable::configure($table);
     }
 
     public static function getRelations(): array
@@ -35,9 +41,9 @@ class TagResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => \App\Filament\Resources\Tags\Pages\ListTags::route('/'),
-            'create' => \App\Filament\Resources\Tags\Pages\CreateTag::route('/create'),
-            'edit' => \App\Filament\Resources\Tags\Pages\EditTag::route('/{record}/edit'),
+            'index' => ListTags::route('/'),
+            'create' => CreateTag::route('/create'),
+            'edit' => EditTag::route('/{record}/edit'),
         ];
     }
 }

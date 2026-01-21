@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Monitor;
+use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,19 +15,19 @@ class MonitorSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = \App\Models\User::first() ?? \App\Models\User::factory()->create([
+        $user = User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@pingpulse.com',
             'password' => bcrypt('password'),
         ]);
 
         // Create Tags
-        $eaTag = \App\Models\Tag::firstOrCreate(['name' => 'EA Games'], ['color' => '#ff0000']);
-        $epicTag = \App\Models\Tag::firstOrCreate(['name' => 'Epic Games'], ['color' => '#000000']);
-        $bethesdaTag = \App\Models\Tag::firstOrCreate(['name' => 'Bethesda'], ['color' => '#ffffff']);
-        $riotTag = \App\Models\Tag::firstOrCreate(['name' => 'Riot Games'], ['color' => '#d13639']);
-        $sonyTag = \App\Models\Tag::firstOrCreate(['name' => 'PlayStation'], ['color' => '#003791']);
-        $netEase = \App\Models\Tag::firstOrCreate(['name' => 'NetEase'], ['color' => '#ed1d24']);
+        $eaTag = Tag::firstOrCreate(['name' => 'EA Games'], ['color' => '#ff0000']);
+        $epicTag = Tag::firstOrCreate(['name' => 'Epic Games'], ['color' => '#000000']);
+        $bethesdaTag = Tag::firstOrCreate(['name' => 'Bethesda'], ['color' => '#ffffff']);
+        $riotTag = Tag::firstOrCreate(['name' => 'Riot Games'], ['color' => '#d13639']);
+        $sonyTag = Tag::firstOrCreate(['name' => 'PlayStation'], ['color' => '#003791']);
+        $netEase = Tag::firstOrCreate(['name' => 'NetEase'], ['color' => '#ed1d24']);
 
         // Define Monitors
         $monitors = [

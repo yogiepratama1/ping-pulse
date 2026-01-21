@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Tag extends Model
 {
@@ -20,7 +21,7 @@ class Tag extends Model
     {
         parent::boot();
         static::creating(function ($tag) {
-            $tag->slug = \Illuminate\Support\Str::slug($tag->name);
+            $tag->slug = Str::slug($tag->name);
         });
     }
 }

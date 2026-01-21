@@ -6,7 +6,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
 
 class IncidentsTable
 {
@@ -14,25 +16,25 @@ class IncidentsTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('monitor.alias')
+                TextColumn::make('monitor.alias')
                     ->searchable()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('started_at')
+                TextColumn::make('started_at')
                     ->dateTime()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('resolved_at')
+                TextColumn::make('resolved_at')
                     ->dateTime()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('duration')
+                TextColumn::make('duration')
                     ->numeric()
                     ->suffix('s')
                     ->sortable(),
             ])
             ->filters([
-                \Filament\Tables\Filters\Filter::make('open')
+                Filter::make('open')
                     ->query(fn($query) => $query->whereNull('resolved_at')),
             ])
             ->recordActions([
