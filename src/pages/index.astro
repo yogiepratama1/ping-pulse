@@ -7,9 +7,20 @@ import { query, initDb } from "../lib/db";
 import type { PingTarget } from "../lib/db";
 
 await initDb();
-const targets = await query<PingTarget>(
+const rawTargets = await query<PingTarget>(
 	"SELECT * FROM ping_targets ORDER BY name ASC",
 );
+
+// Group targets by game/service name
+const targetsGroupedByName: Record<string, PingTarget[]> = {};
+for (const target of rawTargets) {
+	if (!targetsGroupedByName[target.name]) {
+		targetsGroupedByName[target.name] = [];
+	}
+	targetsGroupedByName[target.name].push(target);
+}
+
+const groupedTargets = Object.values(targetsGroupedByName);
 ---
 
 <BaseLayout>
@@ -18,13 +29,24 @@ const targets = await query<PingTarget>(
 	<main class="main">
 		<div class="grid-header">
 			<h2 class="grid-title">Select Target</h2>
-			<p class="grid-subtitle">{targets.length} services available</p>
+			<p class="grid-subtitle">
+				<strong>Ping Pulse</strong> is a lightning-fast, zero-overhead network
+				latency tester built for gamers and developers. Test real HTTP round-trip
+				times against top game servers and API endpoints around the world.
+			</p>
+			<p class="grid-stats">
+				{groupedTargets.length} services available across {
+					rawTargets.length
+				} regions
+			</p>
 		</div>
 
 		<div class="grid">
 			{
-				targets.length > 0 ? (
-					targets.map((target) => <TargetCard target={target} />)
+				groupedTargets.length > 0 ? (
+					groupedTargets.map((group) => (
+						<TargetCard targets={group} />
+					))
 				) : (
 					<div class="empty-state">
 						<p class="empty-title">No targets found</p>
@@ -69,15 +91,29 @@ const targets = await query<PingTarget>(
 
 	.grid-subtitle {
 		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		line-height: 1.5;
+		color: var(--color-text-secondary);
+		margin: 0.8rem 0 1rem;
+		max-width: 800px;
+	}
+
+	.grid-stats {
+		font-family: var(--font-mono);
 		font-size: 0.7rem;
 		font-weight: 500;
 		color: var(--color-text-secondary);
-		margin: 0.3rem 0 0;
+		margin: 0;
+		padding: 0.4rem 0.6rem;
+		background: var(--color-bg-card);
+		border: 2px solid var(--color-border);
+		display: inline-block;
+		box-shadow: 2px 2px 0px var(--color-border);
 	}
 
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
 		gap: 1.5rem;
 	}
 

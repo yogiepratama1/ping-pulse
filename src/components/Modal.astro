@@ -18,13 +18,25 @@
                     aria-label="Close modal">✕</button
                 >
             </div>
-            <div class="modal__meta">
+            <div class="modal__meta" id="modal-meta" style="display: none;">
                 <span id="modal-region" class="modal__region">REGION</span>
                 <span id="modal-type" class="modal__type-badge">TYPE</span>
             </div>
         </div>
 
-        <div class="modal__terminal">
+        <!-- Region Selection UI -->
+        <div id="modal-region-select" class="modal__region-select">
+            <h3 class="modal__region-title">Select Region to Test:</h3>
+            <div id="region-list" class="modal__region-list">
+                <!-- Buttons injected via JS -->
+            </div>
+        </div>
+
+        <div
+            id="modal-terminal-wrapper"
+            class="modal__terminal"
+            style="display: none;"
+        >
             <div class="modal__terminal-header">
                 <span class="modal__terminal-dot modal__terminal-dot--red"
                 ></span>
@@ -74,7 +86,11 @@
             </div>
         </div>
 
-        <button id="modal-test-btn" class="modal__test-btn">
+        <button
+            id="modal-test-btn"
+            class="modal__test-btn"
+            style="display: none;"
+        >
             ▶ TEST CONNECTION
         </button>
     </div>
@@ -85,16 +101,29 @@
     const modalTitle = document.getElementById(
         "modal-title",
     ) as HTMLHeadingElement;
+    const modalMeta = document.getElementById("modal-meta") as HTMLDivElement;
     const modalRegion = document.getElementById(
         "modal-region",
     ) as HTMLSpanElement;
     const modalType = document.getElementById("modal-type") as HTMLSpanElement;
+
+    const regionSelectDiv = document.getElementById(
+        "modal-region-select",
+    ) as HTMLDivElement;
+    const regionListDiv = document.getElementById(
+        "region-list",
+    ) as HTMLDivElement;
+
+    const terminalWrapper = document.getElementById(
+        "modal-terminal-wrapper",
+    ) as HTMLDivElement;
     const modalOutput = document.getElementById(
         "modal-output",
     ) as HTMLDivElement;
     const modalResult = document.getElementById(
         "modal-result",
     ) as HTMLDivElement;
+
     const resultLatency = document.getElementById(
         "result-latency",
     ) as HTMLSpanElement;
@@ -127,24 +156,55 @@
         "FINALIZING DATA STREAM...",
     ];
 
-    function openModal(
-        name: string,
-        region: string,
-        type: string,
-        url: string,
-    ) {
-        currentUrl = url;
-        currentType = type;
-        modalTitle.textContent = name;
-        modalRegion.textContent = `${region}`;
-        modalType.textContent = type === "game" ? "🎮 Game" : "🔌 API";
-        modalType.className = `modal__type-badge modal__type-badge--${type}`;
-        modalOutput.innerHTML = '<p class="modal__output-line">$ ready_</p>';
+    function openModal(servers: any[]) {
+        const gameName =
+            servers.length > 0 ? servers[0].name : "Unknown Target";
+        modalTitle.textContent = gameName;
+
+        // Reset display states
         modalResult.style.display = "none";
-        testBtn.disabled = false;
-        testBtn.textContent = "▶ TEST CONNECTION";
+        testBtn.style.display = "none";
+
+        if (servers.length === 1) {
+            // Only 1 server, skip region selection
+            startTestForTarget(servers[0]);
+        } else {
+            // Show region selection
+            modalMeta.style.display = "none";
+            terminalWrapper.style.display = "none";
+            regionSelectDiv.style.display = "block";
+
+            // Build region buttons
+            regionListDiv.innerHTML = "";
+            servers.forEach((server) => {
+                const btn = document.createElement("button");
+                btn.className = "modal__region-btn";
+                btn.textContent = `📍 ${server.region}`;
+                btn.onclick = () => startTestForTarget(server);
+                regionListDiv.appendChild(btn);
+            });
+        }
+
         modal.classList.add("modal--active");
         modal.setAttribute("aria-hidden", "false");
+    }
+
+    function startTestForTarget(server: any) {
+        currentUrl = server.url;
+        currentType = server.type;
+
+        // Hide region selection, show terminal and meta
+        regionSelectDiv.style.display = "none";
+        modalMeta.style.display = "flex";
+        terminalWrapper.style.display = "block";
+        testBtn.style.display = "block";
+
+        modalRegion.textContent = server.region;
+        modalType.textContent = server.type === "game" ? "🎮 Game" : "🔌 API";
+        modalType.className = `modal__type-badge modal__type-badge--${server.type}`;
+
+        modalOutput.innerHTML = '<p class="modal__output-line">$ ready_</p>';
+        runPingTest();
     }
 
     function closeModal() {
@@ -208,18 +268,48 @@
         testBtn.textContent = "▶ TEST AGAIN";
     }
 
+    function runPingTest() {
+        testBtn.disabled = true;
+        testBtn.textContent = "⟳ TESTING...";
+        modalResult.style.display = "none";
+        startHackerSequence();
+
+        fetch("/api/ping", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: currentUrl, type: currentType }),
+        })
+            .then((res) => res.json())
+            .then((data) => setTimeout(() => showResult(data), 1200))
+            .catch(() => {
+                setTimeout(
+                    () =>
+                        showResult({
+                            latency: 9999,
+                            min: 9999,
+                            max: 9999,
+                            pings: [],
+                            status: "Error",
+                        }),
+                    800,
+                );
+            });
+    }
+
+    testBtn.addEventListener("click", runPingTest);
+
     document.addEventListener("click", (e) => {
         const card = (e.target as HTMLElement).closest(
             ".card",
         ) as HTMLElement | null;
-        if (card) {
+        if (card && card.dataset.servers) {
             e.preventDefault();
-            openModal(
-                card.dataset.name ?? "",
-                card.dataset.region ?? "",
-                card.dataset.type ?? "",
-                card.dataset.url ?? "",
-            );
+            try {
+                const servers = JSON.parse(card.dataset.servers);
+                openModal(servers);
+            } catch (err) {
+                console.error("Failed to parse card servers", err);
+            }
         }
     });
 
@@ -227,35 +317,6 @@
     backdrop.addEventListener("click", closeModal);
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeModal();
-    });
-
-    testBtn.addEventListener("click", async () => {
-        testBtn.disabled = true;
-        testBtn.textContent = "⟳ TESTING...";
-        modalResult.style.display = "none";
-        startHackerSequence();
-
-        try {
-            const res = await fetch("/api/ping", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url: currentUrl, type: currentType }),
-            });
-            const data = await res.json();
-            setTimeout(() => showResult(data), 1200);
-        } catch {
-            setTimeout(
-                () =>
-                    showResult({
-                        latency: 9999,
-                        min: 9999,
-                        max: 9999,
-                        pings: [],
-                        status: "Error",
-                    }),
-                800,
-            );
-        }
     });
 </script>
 
@@ -377,6 +438,54 @@
     .modal__type-badge--api {
         background: var(--color-purple);
         color: white;
+    }
+
+    .modal__region-select {
+        padding: 1.5rem;
+    }
+
+    .modal__region-title {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        color: var(--color-text-primary);
+        margin: 0 0 1rem;
+    }
+
+    .modal__region-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .modal__region-btn {
+        width: 100%;
+        text-align: left;
+        padding: 1rem;
+        background: var(--color-bg-card);
+        border: 3px solid var(--color-border);
+        box-shadow: 3px 3px 0px var(--color-border);
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modal__region-btn:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0px var(--color-border);
+        background: var(--color-accent);
+    }
+
+    .modal__region-btn:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0px var(--color-border);
     }
 
     .modal__terminal {

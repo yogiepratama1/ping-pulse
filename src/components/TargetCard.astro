@@ -2,35 +2,38 @@
 import type { PingTarget } from "../lib/db";
 
 interface Props {
-    target: PingTarget;
+    targets: PingTarget[];
 }
 
-const { target } = Astro.props;
-const isGame = target.type === "game";
+const { targets } = Astro.props;
+const mainTarget = targets[0];
+const isGame = mainTarget.type === "game";
 const accentColor = isGame ? "var(--color-secondary)" : "var(--color-purple)";
 const typeLabel = isGame ? "🎮 Game Server" : "🔌 API Endpoint";
+
+const serversJson = JSON.stringify(targets);
 ---
 
 <button
     class="card"
-    data-url={target.url}
-    data-type={target.type}
-    data-name={target.name}
-    data-region={target.region}
+    data-servers={serversJson}
     style={`--card-accent: ${accentColor};`}
 >
     <div
         class="card__bg"
-        style={`background-image: url('${target.image_url}');`}
+        style={`background-image: url('${mainTarget.image_url}');`}
     >
     </div>
     <div class="card__overlay"></div>
     <div class="card__content">
         <span class="card__type">{typeLabel}</span>
-        <h2 class="card__name">{target.name}</h2>
+        <h2 class="card__name">{mainTarget.name}</h2>
         <div class="card__meta">
-            <span class="card__region">📍 {target.region}</span>
-            <span class="card__ping-label">Click to test →</span>
+            <span class="card__region"
+                >📍 {targets.length}
+                {targets.length === 1 ? "Region" : "Regions"} Available</span
+            >
+            <span class="card__ping-label">Select Server →</span>
         </div>
     </div>
 </button>
