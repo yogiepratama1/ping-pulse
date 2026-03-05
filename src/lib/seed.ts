@@ -1,66 +1,12 @@
 import pg from 'pg';
 import Database from 'better-sqlite3';
 import 'dotenv/config';
+import fs from 'node:fs';
 
 // Determine the database type to use (default to sqlite)
 const dbType = process.env.DB_TYPE || 'sqlite';
 
-const targets = [
-    {
-        id: 'apex-sg',
-        name: 'Apex Legends',
-        type: 'game',
-        region: 'Singapore',
-        url: 'https://dynamodb.ap-southeast-1.amazonaws.com/ping',
-        image_url:
-            'https://www.dexerto.com/cdn-image/wp-content/uploads/2024/08/01/apex-season-22.jpg',
-    },
-    {
-        id: 'marvel-sg',
-        name: 'Marvel Rivals',
-        type: 'game',
-        region: 'Singapore',
-        url: 'https://dynamodb.ap-southeast-1.amazonaws.com/ping',
-        image_url:
-            'https://images3.alphacoders.com/138/1386592.jpg',
-    },
-    {
-        id: 'lol-sea',
-        name: 'League of Legends',
-        type: 'game',
-        region: 'SEA',
-        url: 'https://dynamodb.ap-southeast-1.amazonaws.com/ping',
-        image_url:
-            'https://interestingfacts.co.za/wp-content/uploads/2024/09/League-Of-Legends-1536x864.jpg',
-    },
-    {
-        id: 'helldivers-sg',
-        name: 'Helldivers 2',
-        type: 'game',
-        region: 'Singapore',
-        url: 'https://dynamodb.ap-southeast-1.amazonaws.com/ping',
-        image_url:
-            'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/553850/header.jpg',
-    },
-    {
-        id: 'fortnite-tokyo',
-        name: 'Fortnite',
-        type: 'game',
-        region: 'Tokyo',
-        url: 'https://dynamodb.ap-northeast-1.amazonaws.com/ping',
-        image_url:
-            'https://cdn2.unrealengine.com/social-image-chapter4-s3-3840x2160-d35912cc25ad.jpg',
-    },
-    {
-        id: 'gemini-api',
-        name: 'Gemini API',
-        type: 'api',
-        region: 'Global',
-        url: 'https://generativelanguage.googleapis.com/v1beta/models',
-        image_url:
-            'https://storage.googleapis.com/gweb-uniblog-publish-prod/images/Gemini_SS.width-1300.jpg',
-    },
-];
+const targets = JSON.parse(fs.readFileSync('server-list/data.json', 'utf-8'));
 
 async function seed() {
     console.log(`🔧 Connecting to ${dbType === 'sqlite' ? 'SQLite' : 'PostgreSQL'} database...`);
