@@ -1,0 +1,169 @@
+---
+import type { PingTarget } from "../lib/db";
+
+interface Props {
+    target: PingTarget;
+}
+
+const { target } = Astro.props;
+const isGame = target.type === "game";
+const accentColor = isGame
+    ? "var(--color-neon-green)"
+    : "var(--color-neon-magenta)";
+const accentShadow = isGame
+    ? "var(--shadow-neon-green)"
+    : "var(--shadow-neon-magenta)";
+const typeLabel = isGame ? "▸ GAME SERVER" : "▸ API ENDPOINT";
+---
+
+<button
+    class="card"
+    data-url={target.url}
+    data-type={target.type}
+    data-name={target.name}
+    data-region={target.region}
+    style={`--accent: ${accentColor}; --accent-shadow: ${accentShadow};`}
+>
+    <div
+        class="card__bg"
+        style={`background-image: url('${target.image_url}');`}
+    >
+    </div>
+    <div class="card__overlay"></div>
+    <div class="card__content">
+        <span class="card__type">{typeLabel}</span>
+        <h2 class="card__name">{target.name}</h2>
+        <div class="card__meta">
+            <span class="card__region">⌘ {target.region}</span>
+            <span class="card__ping-label">CLICK TO TEST</span>
+        </div>
+    </div>
+    <div class="card__border-glow"></div>
+</button>
+
+<style>
+    .card {
+        position: relative;
+        border: 4px solid var(--accent);
+        background: var(--color-bg-card);
+        min-height: 220px;
+        cursor: pointer;
+        overflow: hidden;
+        transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0;
+        font-family: var(--font-mono);
+        text-align: left;
+        width: 100%;
+        color: var(--color-neon-cyan);
+        outline: none;
+    }
+
+    .card:hover {
+        transform: translate(-4px, -4px);
+        box-shadow:
+            4px 4px 0 var(--accent),
+            var(--accent-shadow);
+    }
+
+    .card:active {
+        transform: translate(0, 0);
+        box-shadow: none;
+    }
+
+    .card__bg {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        opacity: 0.3;
+        transition: opacity 0.3s ease;
+    }
+
+    .card:hover .card__bg {
+        opacity: 0.45;
+    }
+
+    .card__overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.95) 0%,
+            rgba(0, 0, 0, 0.5) 50%,
+            rgba(0, 0, 0, 0.2) 100%
+        );
+    }
+
+    .card__content {
+        position: relative;
+        z-index: 1;
+        padding: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .card__type {
+        font-size: 0.6rem;
+        letter-spacing: 0.25em;
+        color: var(--accent);
+        text-transform: uppercase;
+    }
+
+    .card__name {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0;
+        text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .card__meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.3rem;
+    }
+
+    .card__region {
+        font-size: 0.65rem;
+        color: var(--color-neon-cyan);
+        letter-spacing: 0.15em;
+        opacity: 0.8;
+    }
+
+    .card__ping-label {
+        font-size: 0.55rem;
+        color: var(--accent);
+        letter-spacing: 0.2em;
+        border: 1px solid var(--accent);
+        padding: 0.15rem 0.4rem;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .card:hover .card__ping-label {
+        opacity: 1;
+    }
+
+    .card__border-glow {
+        position: absolute;
+        inset: -2px;
+        border: 2px solid var(--accent);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        box-shadow: var(--accent-shadow);
+    }
+
+    .card:hover .card__border-glow {
+        opacity: 0.5;
+    }
+</style>

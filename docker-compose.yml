@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: pingpulse
+      POSTGRES_PASSWORD: pingpulse
+      POSTGRES_DB: pingpulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U pingpulse" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  ping-pulse:
+    build: .
+    ports:
+      - "4321:4321"
+    environment:
+      DATABASE_URL: postgresql://pingpulse:pingpulse@db:5432/pingpulse
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -6,9 +6,19 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "seed": "npx tsx src/lib/seed.ts"
   },
   "dependencies": {
-    "astro": "^5.17.1"
+    "@astrojs/node": "^9.5.4",
+    "@tailwindcss/vite": "^4.2.1",
+    "astro": "^5.17.1",
+    "dotenv": "^17.3.1",
+    "pg": "^8.20.0",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "@types/pg": "^8.18.0"
   }
 }

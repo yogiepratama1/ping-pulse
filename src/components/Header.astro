@@ -1,0 +1,172 @@
+---
+/**
+ * Header.astro — Cyber-Brutalist header with animated title
+ */
+---
+
+<header class="header">
+    <div class="header__inner">
+        <div class="header__logo-group">
+            <div class="header__pulse-icon">
+                <svg
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="header__svg"
+                >
+                    <rect
+                        x="2"
+                        y="2"
+                        width="44"
+                        height="44"
+                        stroke="currentColor"
+                        stroke-width="4"
+                        fill="none"></rect>
+                    <polyline
+                        points="4,24 12,24 16,10 22,38 28,16 34,32 38,24 44,24"
+                        stroke="currentColor"
+                        stroke-width="3"
+                        fill="none"
+                        stroke-linejoin="bevel"></polyline>
+                </svg>
+            </div>
+            <div class="header__text">
+                <h1 class="header__title" data-text="PING PULSE">PING PULSE</h1>
+                <p class="header__tagline">NETWORK LATENCY TERMINAL</p>
+            </div>
+        </div>
+        <div class="header__status">
+            <span class="header__dot"></span>
+            <span class="header__status-text">SYSTEM ONLINE</span>
+        </div>
+    </div>
+</header>
+
+<style>
+    .header {
+        border-bottom: 4px solid var(--color-neon-cyan);
+        background: var(--color-bg-primary);
+        padding: 1.5rem 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--color-neon-cyan);
+        box-shadow: var(--shadow-neon-cyan);
+    }
+
+    .header__inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header__logo-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .header__pulse-icon {
+        width: 48px;
+        height: 48px;
+        color: var(--color-neon-cyan);
+        animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .header__svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .header__title {
+        font-family: var(--font-mono);
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--color-neon-cyan);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin: 0;
+        position: relative;
+        animation: text-flicker 4s linear infinite;
+    }
+
+    .header__title::before,
+    .header__title::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .header__title::before {
+        color: var(--color-neon-magenta);
+        clip-path: inset(0 0 60% 0);
+        animation: glitch 3s infinite linear alternate-reverse;
+    }
+
+    .header__title::after {
+        color: var(--color-neon-green);
+        clip-path: inset(60% 0 0 0);
+        animation: glitch 2s infinite linear alternate;
+    }
+
+    .header__tagline {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--color-neon-magenta);
+        letter-spacing: 0.35em;
+        margin: 0.2rem 0 0;
+        text-transform: uppercase;
+    }
+
+    .header__status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 2px solid var(--color-neon-green);
+        padding: 0.4rem 0.8rem;
+    }
+
+    .header__dot {
+        width: 8px;
+        height: 8px;
+        background: var(--color-neon-green);
+        box-shadow: 0 0 6px var(--color-neon-green);
+        animation: pulse-glow 1.5s ease-in-out infinite;
+    }
+
+    .header__status-text {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--color-neon-green);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 640px) {
+        .header {
+            padding: 1rem;
+        }
+        .header__title {
+            font-size: 1.4rem;
+        }
+        .header__tagline {
+            font-size: 0.6rem;
+        }
+    }
+</style>
