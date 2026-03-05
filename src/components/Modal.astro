@@ -1,0 +1,530 @@
+---
+/**
+ * Modal.astro — Neo-Brutalist testing terminal overlay
+ * Handles card clicks, hacker sequence animation, and ping API calls
+ */
+---
+
+<div id="ping-modal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <div class="modal__container">
+        <div class="modal__header">
+            <div class="modal__title-row">
+                <span class="modal__icon">⚡</span>
+                <h2 id="modal-title" class="modal__title">TARGET</h2>
+                <button
+                    id="modal-close"
+                    class="modal__close"
+                    aria-label="Close modal">✕</button
+                >
+            </div>
+            <div class="modal__meta">
+                <span id="modal-region" class="modal__region">REGION</span>
+                <span id="modal-type" class="modal__type-badge">TYPE</span>
+            </div>
+        </div>
+
+        <div class="modal__terminal">
+            <div class="modal__terminal-header">
+                <span class="modal__terminal-dot modal__terminal-dot--red"
+                ></span>
+                <span class="modal__terminal-dot modal__terminal-dot--yellow"
+                ></span>
+                <span class="modal__terminal-dot modal__terminal-dot--green"
+                ></span>
+                <span class="modal__terminal-label">ping-pulse-terminal</span>
+            </div>
+            <div id="modal-output" class="modal__output">
+                <p class="modal__output-line">$ ready_</p>
+            </div>
+        </div>
+
+        <div id="modal-result" class="modal__result" style="display: none;">
+            <div class="modal__result-grid">
+                <div class="modal__result-item">
+                    <span class="modal__result-label">AVG</span>
+                    <span id="result-latency" class="modal__result-value"
+                        >--</span
+                    >
+                </div>
+                <div class="modal__result-item">
+                    <span class="modal__result-label">MIN</span>
+                    <span
+                        id="result-min"
+                        class="modal__result-value modal__result-value--small"
+                        >--</span
+                    >
+                </div>
+                <div class="modal__result-item">
+                    <span class="modal__result-label">MAX</span>
+                    <span
+                        id="result-max"
+                        class="modal__result-value modal__result-value--small"
+                        >--</span
+                    >
+                </div>
+                <div class="modal__result-item">
+                    <span class="modal__result-label">STATUS</span>
+                    <span
+                        id="result-status"
+                        class="modal__result-value modal__result-value--small"
+                        >--</span
+                    >
+                </div>
+            </div>
+        </div>
+
+        <button id="modal-test-btn" class="modal__test-btn">
+            ▶ TEST CONNECTION
+        </button>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById("ping-modal") as HTMLDivElement;
+    const modalTitle = document.getElementById(
+        "modal-title",
+    ) as HTMLHeadingElement;
+    const modalRegion = document.getElementById(
+        "modal-region",
+    ) as HTMLSpanElement;
+    const modalType = document.getElementById("modal-type") as HTMLSpanElement;
+    const modalOutput = document.getElementById(
+        "modal-output",
+    ) as HTMLDivElement;
+    const modalResult = document.getElementById(
+        "modal-result",
+    ) as HTMLDivElement;
+    const resultLatency = document.getElementById(
+        "result-latency",
+    ) as HTMLSpanElement;
+    const resultMin = document.getElementById("result-min") as HTMLSpanElement;
+    const resultMax = document.getElementById("result-max") as HTMLSpanElement;
+    const resultStatus = document.getElementById(
+        "result-status",
+    ) as HTMLSpanElement;
+
+    const testBtn = document.getElementById(
+        "modal-test-btn",
+    ) as HTMLButtonElement;
+    const closeBtn = document.getElementById(
+        "modal-close",
+    ) as HTMLButtonElement;
+    const backdrop = modal.querySelector(".modal__backdrop") as HTMLDivElement;
+
+    let currentUrl = "";
+    let currentType = "";
+    let hackerInterval: ReturnType<typeof setInterval> | null = null;
+
+    const phrases = [
+        "RESOLVING HOST ADDRESS...",
+        "INITIATING TCP HANDSHAKE...",
+        "NEGOTIATING TLS 1.3...",
+        "POLLING GATEWAY NODE...",
+        "MEASURING ROUND TRIP TIME...",
+        "CALCULATING PACKET JITTER...",
+        "VERIFYING SERVICE UPTIME...",
+        "FINALIZING DATA STREAM...",
+    ];
+
+    function openModal(
+        name: string,
+        region: string,
+        type: string,
+        url: string,
+    ) {
+        currentUrl = url;
+        currentType = type;
+        modalTitle.textContent = name;
+        modalRegion.textContent = `${region}`;
+        modalType.textContent = type === "game" ? "🎮 Game" : "🔌 API";
+        modalType.className = `modal__type-badge modal__type-badge--${type}`;
+        modalOutput.innerHTML = '<p class="modal__output-line">$ ready_</p>';
+        modalResult.style.display = "none";
+        testBtn.disabled = false;
+        testBtn.textContent = "▶ TEST CONNECTION";
+        modal.classList.add("modal--active");
+        modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal() {
+        modal.classList.remove("modal--active");
+        modal.setAttribute("aria-hidden", "true");
+        if (hackerInterval) {
+            clearInterval(hackerInterval);
+            hackerInterval = null;
+        }
+    }
+
+    function startHackerSequence() {
+        let index = 0;
+        modalOutput.innerHTML = "";
+        hackerInterval = setInterval(() => {
+            const line = document.createElement("p");
+            line.className = "modal__output-line modal__output-line--active";
+            line.textContent = `$ ${phrases[index % phrases.length]}`;
+            modalOutput.appendChild(line);
+            modalOutput.scrollTop = modalOutput.scrollHeight;
+            index++;
+        }, 400);
+    }
+
+    function getColorClass(status: string) {
+        if (status === "Healthy") return "modal__result-value--green";
+        if (status === "Degraded") return "modal__result-value--yellow";
+        return "modal__result-value--red";
+    }
+
+    function showResult(data: {
+        latency: number;
+        min: number;
+        max: number;
+        pings: number[];
+        status: string;
+    }) {
+        if (hackerInterval) {
+            clearInterval(hackerInterval);
+            hackerInterval = null;
+        }
+
+        const doneLine = document.createElement("p");
+        doneLine.className = "modal__output-line modal__output-line--done";
+        doneLine.textContent = `$ 10 PINGS COMPLETE — AVG: ${data.latency}ms ✓`;
+        modalOutput.appendChild(doneLine);
+        modalOutput.scrollTop = modalOutput.scrollHeight;
+
+        const colorCls = getColorClass(data.status);
+        resultLatency.textContent = `${data.latency}ms`;
+        resultLatency.className = `modal__result-value ${colorCls}`;
+        resultMin.textContent = `${data.min}ms`;
+        resultMin.className = `modal__result-value modal__result-value--small ${colorCls}`;
+        resultMax.textContent = `${data.max}ms`;
+        resultMax.className = `modal__result-value modal__result-value--small ${colorCls}`;
+        resultStatus.textContent = data.status;
+        resultStatus.className = `modal__result-value modal__result-value--small ${colorCls}`;
+
+        modalResult.style.display = "block";
+        testBtn.disabled = false;
+        testBtn.textContent = "▶ TEST AGAIN";
+    }
+
+    document.addEventListener("click", (e) => {
+        const card = (e.target as HTMLElement).closest(
+            ".card",
+        ) as HTMLElement | null;
+        if (card) {
+            e.preventDefault();
+            openModal(
+                card.dataset.name ?? "",
+                card.dataset.region ?? "",
+                card.dataset.type ?? "",
+                card.dataset.url ?? "",
+            );
+        }
+    });
+
+    closeBtn.addEventListener("click", closeModal);
+    backdrop.addEventListener("click", closeModal);
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+    });
+
+    testBtn.addEventListener("click", async () => {
+        testBtn.disabled = true;
+        testBtn.textContent = "⟳ TESTING...";
+        modalResult.style.display = "none";
+        startHackerSequence();
+
+        try {
+            const res = await fetch("/api/ping", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: currentUrl, type: currentType }),
+            });
+            const data = await res.json();
+            setTimeout(() => showResult(data), 1200);
+        } catch {
+            setTimeout(
+                () =>
+                    showResult({
+                        latency: 9999,
+                        min: 9999,
+                        max: 9999,
+                        pings: [],
+                        status: "Error",
+                    }),
+                800,
+            );
+        }
+    });
+</script>
+
+<style>
+    .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    .modal--active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(26, 26, 46, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    .modal__container {
+        position: relative;
+        width: 90%;
+        max-width: 580px;
+        background: var(--color-bg-primary);
+        border: 4px solid var(--color-border);
+        box-shadow: var(--shadow-brutal-lg);
+        padding: 0;
+        overflow: hidden;
+        animation: bounce-in 0.25s ease-out;
+    }
+
+    .modal__header {
+        padding: 1.2rem 1.5rem 0.8rem;
+        background: var(--color-secondary);
+        border-bottom: 4px solid var(--color-border);
+    }
+
+    .modal__title-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .modal__icon {
+        font-size: 1.2rem;
+    }
+
+    .modal__title {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        letter-spacing: -0.02em;
+        margin: 0;
+        flex: 1;
+    }
+
+    .modal__close {
+        background: var(--color-bg-card);
+        border: 3px solid var(--color-border);
+        box-shadow: 3px 3px 0px var(--color-border);
+        color: var(--color-text-primary);
+        font-family: var(--font-display);
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 0.15rem 0.5rem;
+        transition: all 0.1s ease;
+    }
+
+    .modal__close:hover {
+        background: var(--color-danger);
+        color: white;
+        transform: translate(1px, 1px);
+        box-shadow: 2px 2px 0px var(--color-border);
+    }
+
+    .modal__close:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0px var(--color-border);
+    }
+
+    .modal__meta {
+        display: flex;
+        gap: 0.8rem;
+        margin-top: 0.5rem;
+        align-items: center;
+    }
+
+    .modal__region {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: var(--color-text-primary);
+    }
+
+    .modal__type-badge {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        font-weight: 600;
+        padding: 0.15rem 0.5rem;
+        border: 2px solid var(--color-border);
+        background: var(--color-bg-card);
+        box-shadow: 2px 2px 0px var(--color-border);
+    }
+
+    .modal__type-badge--game {
+        background: var(--color-secondary);
+    }
+    .modal__type-badge--api {
+        background: var(--color-purple);
+        color: white;
+    }
+
+    .modal__terminal {
+        margin: 1rem 1.5rem;
+        border: 3px solid var(--color-border);
+        box-shadow: var(--shadow-brutal);
+        background: var(--color-bg-dark);
+        overflow: hidden;
+    }
+
+    .modal__terminal-header {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.7rem;
+        background: #2a2a4e;
+        border-bottom: 2px solid var(--color-border);
+    }
+
+    .modal__terminal-dot {
+        width: 10px;
+        height: 10px;
+        border: 2px solid var(--color-border);
+        border-radius: 50%;
+    }
+
+    .modal__terminal-dot--red {
+        background: var(--color-danger);
+    }
+    .modal__terminal-dot--yellow {
+        background: var(--color-accent);
+    }
+    .modal__terminal-dot--green {
+        background: var(--color-success);
+    }
+
+    .modal__terminal-label {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-left: 0.4rem;
+    }
+
+    .modal__output {
+        padding: 0.8rem;
+        max-height: 180px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #4ecdc4 transparent;
+    }
+
+    :global(.modal__output-line) {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin: 0 0 0.3rem;
+    }
+
+    :global(.modal__output-line--active) {
+        color: #5eead4 !important;
+    }
+
+    :global(.modal__output-line--done) {
+        color: #fde047 !important;
+        font-weight: 700;
+    }
+
+    .modal__result {
+        margin: 0 1.5rem 1rem;
+        border: 3px solid var(--color-border);
+        box-shadow: var(--shadow-brutal);
+        padding: 1rem;
+        background: var(--color-bg-card);
+    }
+
+    .modal__result-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.8rem;
+        text-align: center;
+    }
+
+    .modal__result-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .modal__result-label {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        letter-spacing: 0.1em;
+    }
+
+    .modal__result-value {
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+    }
+
+    .modal__result-value--small {
+        font-size: 1rem;
+    }
+
+    .modal__result-value--green {
+        color: #16a34a;
+    }
+
+    .modal__result-value--yellow {
+        color: #d97706;
+    }
+
+    .modal__result-value--red {
+        color: var(--color-danger);
+    }
+
+    .modal__test-btn {
+        display: block;
+        width: calc(100% - 3rem);
+        margin: 0 1.5rem 1.5rem;
+        padding: 0.8rem;
+        background: var(--color-primary);
+        border: 4px solid var(--color-border);
+        box-shadow: var(--shadow-brutal);
+        color: white;
+        font-family: var(--font-display);
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    .modal__test-btn:hover:not(:disabled) {
+        transform: translate(-2px, -2px);
+        box-shadow: 7px 7px 0px var(--color-border);
+    }
+
+    .modal__test-btn:active:not(:disabled) {
+        transform: translate(2px, 2px);
+        box-shadow: var(--shadow-brutal-active);
+    }
+
+    .modal__test-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>

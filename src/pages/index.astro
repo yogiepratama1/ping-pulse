@@ -1,17 +1,139 @@
 ---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import TargetCard from "../components/TargetCard.astro";
+import Modal from "../components/Modal.astro";
+import { query, initDb } from "../lib/db";
+import type { PingTarget } from "../lib/db";
 
+await initDb();
+const targets = await query<PingTarget>(
+	"SELECT * FROM ping_targets ORDER BY name ASC",
+);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout>
+	<Header />
+
+	<main class="main">
+		<div class="grid-header">
+			<h2 class="grid-title">Select Target</h2>
+			<p class="grid-subtitle">{targets.length} services available</p>
+		</div>
+
+		<div class="grid">
+			{
+				targets.length > 0 ? (
+					targets.map((target) => <TargetCard target={target} />)
+				) : (
+					<div class="empty-state">
+						<p class="empty-title">No targets found</p>
+						<p class="empty-hint">
+							Run <code>npm run seed</code> to populate the
+							database
+						</p>
+					</div>
+				)
+			}
+		</div>
+	</main>
+
+	<Modal />
+
+	<footer class="footer">
+		<p>Ping Pulse v1.0 — Network Latency Tester</p>
+	</footer>
+</BaseLayout>
+
+<style>
+	.main {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 2rem;
+	}
+
+	.grid-header {
+		margin-bottom: 1.5rem;
+		padding-bottom: 1rem;
+		border-bottom: 3px solid var(--color-border);
+	}
+
+	.grid-title {
+		font-family: var(--font-display);
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+		letter-spacing: -0.02em;
+		margin: 0;
+	}
+
+	.grid-subtitle {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+		margin: 0.3rem 0 0;
+	}
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.empty-state {
+		grid-column: 1 / -1;
+		text-align: center;
+		padding: 3rem;
+		border: 3px dashed var(--color-border);
+		background: var(--color-bg-card);
+	}
+
+	.empty-title {
+		font-family: var(--font-display);
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+		margin: 0;
+	}
+
+	.empty-hint {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--color-text-secondary);
+		margin-top: 0.5rem;
+	}
+
+	.empty-hint code {
+		background: var(--color-accent);
+		border: 2px solid var(--color-border);
+		padding: 0.1rem 0.4rem;
+		font-weight: 600;
+	}
+
+	.footer {
+		text-align: center;
+		padding: 1.5rem;
+		border-top: 3px solid var(--color-border);
+		margin-top: 2rem;
+		background: var(--color-bg-card);
+	}
+
+	.footer p {
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+		margin: 0;
+	}
+
+	@media (max-width: 640px) {
+		.main {
+			padding: 1rem;
+		}
+		.grid {
+			grid-template-columns: 1fr;
+			gap: 1rem;
+		}
+	}
+</style>

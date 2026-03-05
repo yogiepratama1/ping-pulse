@@ -1,0 +1,150 @@
+---
+import type { PingTarget } from "../lib/db";
+
+interface Props {
+    target: PingTarget;
+}
+
+const { target } = Astro.props;
+const isGame = target.type === "game";
+const accentColor = isGame ? "var(--color-secondary)" : "var(--color-purple)";
+const typeLabel = isGame ? "🎮 Game Server" : "🔌 API Endpoint";
+---
+
+<button
+    class="card"
+    data-url={target.url}
+    data-type={target.type}
+    data-name={target.name}
+    data-region={target.region}
+    style={`--card-accent: ${accentColor};`}
+>
+    <div
+        class="card__bg"
+        style={`background-image: url('${target.image_url}');`}
+    >
+    </div>
+    <div class="card__overlay"></div>
+    <div class="card__content">
+        <span class="card__type">{typeLabel}</span>
+        <h2 class="card__name">{target.name}</h2>
+        <div class="card__meta">
+            <span class="card__region">📍 {target.region}</span>
+            <span class="card__ping-label">Click to test →</span>
+        </div>
+    </div>
+</button>
+
+<style>
+    .card {
+        position: relative;
+        border: 4px solid var(--color-border);
+        box-shadow: var(--shadow-brutal-lg);
+        background: var(--color-bg-dark);
+        min-height: 240px;
+        cursor: pointer;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0;
+        font-family: var(--font-display);
+        text-align: left;
+        width: 100%;
+        color: white;
+        outline: none;
+    }
+
+    .card:hover {
+        transform: translate(-3px, -3px);
+        box-shadow: 11px 11px 0px var(--color-border);
+    }
+
+    .card:active {
+        transform: translate(2px, 2px);
+    }
+
+    .card__bg {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        opacity: 0.8;
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover .card__bg {
+        transform: scale(1.05);
+    }
+
+    .card__overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.85) 0%,
+            rgba(0, 0, 0, 0.4) 50%,
+            rgba(0, 0, 0, 0.05) 100%
+        );
+    }
+
+    .card__content {
+        position: relative;
+        z-index: 1;
+        padding: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .card__type {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: var(--color-text-primary);
+        background: var(--card-accent);
+        border: 2px solid var(--color-border);
+        padding: 0.2rem 0.5rem;
+        display: inline-block;
+        width: fit-content;
+        box-shadow: 2px 2px 0px var(--color-border);
+    }
+
+    .card__name {
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.02em;
+        margin: 0;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .card__meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.2rem;
+    }
+
+    .card__region {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .card__ping-label {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: var(--color-accent);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .card:hover .card__ping-label {
+        opacity: 1;
+    }
+</style>

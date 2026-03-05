@@ -1,0 +1,124 @@
+@import 'tailwindcss';
+
+/* ============================================
+   PING PULSE — Neo-Brutalist Design System
+   ============================================ */
+
+@theme {
+  /* Primary Palette */
+  --color-primary: #FF6B35;
+  --color-secondary: #4ECDC4;
+  --color-accent: #FFE66D;
+  --color-danger: #FF3366;
+  --color-success: #2ECC71;
+  --color-purple: #A855F7;
+
+  /* Backgrounds */
+  --color-bg-primary: #FFFDF7;
+  --color-bg-card: #FFFFFF;
+  --color-bg-modal: rgba(0, 0, 0, 0.6);
+  --color-bg-dark: #1A1A2E;
+
+  /* Text */
+  --color-text-primary: #1A1A2E;
+  --color-text-secondary: #4A4A68;
+  --color-text-light: #FFFFFF;
+
+  /* Borders */
+  --color-border: #1A1A2E;
+
+  /* Typography */
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Shadows — Neo-Brutalist signature */
+  --shadow-brutal: 5px 5px 0px #1A1A2E;
+  --shadow-brutal-lg: 8px 8px 0px #1A1A2E;
+  --shadow-brutal-hover: 3px 3px 0px #1A1A2E;
+  --shadow-brutal-active: 1px 1px 0px #1A1A2E;
+}
+
+/* Global base */
+html {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(circle at 20px 20px, rgba(26, 26, 46, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+/* Smooth transitions */
+* {
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+/* Animations */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.02);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes wiggle {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-2deg);
+  }
+
+  75% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+}
