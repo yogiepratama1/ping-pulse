@@ -1,14 +1,15 @@
 services:
   db:
+    container_name: ping-pulse-db
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: pingpulse
       POSTGRES_PASSWORD: pingpulse
       POSTGRES_DB: pingpulse
     ports:
-      - "5432:5432"
+      - "5444:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ping-pulse-pgdata:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U pingpulse" ]
       interval: 5s
@@ -16,6 +17,7 @@ services:
       retries: 5
 
   ping-pulse:
+    container_name: ping-pulse-app
     build: .
     ports:
       - "4321:4321"
@@ -29,4 +31,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  pgdata:
+  ping-pulse-pgdata:
